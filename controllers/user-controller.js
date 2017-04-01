@@ -1,8 +1,39 @@
 "use strict";
 
+const AuthenticationController = require('./authentication-controller');
 const User = require('../models').user;
 const bunyan = require('bunyan');
 const log = bunyan.createLogger({name: 'UserController'});
+
+const createUserDiff = (req) => {
+  let changes = {};
+  let fields = [];
+  if (req.params.username && req.decoded.username !== req.params.username) {
+    changes.username = req.params.username;
+    fields.push('username');
+  }
+  if (req.params.password && req.decoded.password !== req.params.password) {
+    changes.password = req.params.password;
+    fields.push('password');
+  }
+  if (req.params.email && req.decoded.email !== req.params.email) {
+    changes.email = req.params.email;
+    fields.push('email');
+  }
+  if (req.params.phoneNumber && req.decoded.phoneNumber !== req.params.phoneNumber) {
+    changes.phoneNumber = req.params.phoneNumber;
+    fields.push('phoneNumber');
+  }
+  return { changes, fields };
+};
+
+const logAndSendError = (res, next) => {
+  return (error) => {
+    log.error(error);
+    res.json(500, { success: false, error });
+    return next(false);
+  };
+};
 
 module.exports = class UserController {
 
@@ -16,14 +47,11 @@ module.exports = class UserController {
       }
       res.json({success: true, user});
       return next();
-    }).catch(function(error) {
-      log.error(error);
-      res.json(500, { success: false, error });
-      return next(false);
-    });
+    }).catch(logAndSendError(res, next));
   }
 
   static createUser(req, res, next) {
+    // TODO: validate input
     const username = req.params.username;
     const password = req.params.password;
     const email = req.params.email;
@@ -45,7 +73,9 @@ module.exports = class UserController {
   // TODO: better way to do this?
   // TODO: new JWT
   static updateUser(req, res, next) {
-    if (req.decoded.username !== req.params.username || req.decoded.email !== req.params.email) {
+    const { changes, fields } = createUserDiff(req);
+
+    if (changes.username || changes.email) {
       User.findOne({
         where: { $or: [
           { username: req.params.username },
@@ -53,37 +83,33 @@ module.exports = class UserController {
         ]}
       }).then((user) => {
         if (user) {
-          res.json(400, {success: true, user});
+          res.json(400, { success: false, message: 'Username or Email is already taken.' });
           return next(false);
         }
-        User.update({
-          username: req.params.username,
-          password: req.params.password,
-          email: req.params.email,
-          phoneNumber: req.params.phone_number
-        }, {
-          where: { id: req.decoded.id}
-        }).then((updatedUser) => {
-          res.json(200, {success: true, user: updatedUser});
-        }).catch((error) => {
-          log.error(error);
-        }).then(() => {
-          return next();
-        });
+        User.findOne({
+          where: {
+            id: req.decoded.id
+          }
+        }).then((user) => {
+          user.update(changes, { fields }).then((updatedUser) => {
+            const newToken = AuthenticationController.createJwtForUser(updatedUser);
+            res.json(200, { success: true, user: updatedUser, token: newToken });
+            return next();
+          });
+        }).catch(logAndSendError(res, next));
       });
     } else {
-      User.update({
-        password: req.params.password,
-        phoneNumber: req.params.phone_number
-      }, {
-        where: { id: req.decoded.id}
-      }).then((updatedUser) => {
-        res.json(200, {success: true, user: updatedUser});
-      }).catch((error) => {
-        log.error(error);
-      }).then(() => {
-        return next();
-      });
+      User.findOne({
+        where: {
+          id: req.decoded.id
+        }
+      }).then((user) => {
+        user.update(changes, { fields }).then((updatedUser) => {
+          const newToken = AuthenticationController.createJwtForUser(updatedUser);
+          res.json(200, { success: true, user: updatedUser, token: newToken });
+          return next();
+        });
+      }).catch(logAndSendError(res, next));
     }
   }
 
@@ -96,9 +122,7 @@ module.exports = class UserController {
         return next(false);
       }
       res.json({success: true, user});
-    }).catch(function(error) {
-      log.error(error);
-    }).then(function() {
+    }).catch(logAndSendError(res, next)).then(function() {
       return next();
     });
   }
