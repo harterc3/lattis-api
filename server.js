@@ -2,6 +2,7 @@
 
 const restify = require('restify');
 const restifyValidation = require('node-restify-validation');
+const helmet = require('helmet');
 const bunyan = require('bunyan');
 
 const server = restify.createServer({
@@ -11,6 +12,9 @@ const server = restify.createServer({
 server.use(restify.queryParser());
 server.use(restify.bodyParser());
 server.use(restify.CORS({}));
+
+// security http headers middleware
+server.use(helmet());
 
 server.use(restifyValidation.validationPlugin({
   errorsAsArray: true,
