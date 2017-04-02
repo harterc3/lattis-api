@@ -1,6 +1,6 @@
 "use strict";
 
-const jwtHelper = require('../helpers/jwt-helper');
+const JwtHelper = require('../helpers/jwt-helper');
 
 module.exports = class Authenticator {
 
@@ -8,7 +8,7 @@ module.exports = class Authenticator {
     // get access token from request header
     const token = req.params.token || req.headers['x-access-token'];
     if (token) {
-      jwtHelper.verifyJwt(token, (err, jwtUser) => {
+      JwtHelper.verifyJwt(token, (err, jwtUser) => {
         if (err) {
           res.json({success: false, message: 'Failed to authenticate token.'});
           return next(false);

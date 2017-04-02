@@ -21,7 +21,8 @@ module.exports = class LockHydrator {
       let lockId = req.params[lockIdParamName];
       req.lock = null;
       if (!lockId) {
-        return next();
+        res.json(400, { success: false, message: 'No lockId route parameter.' });
+        return next(false);
       }
 
       let query = {
@@ -38,9 +39,8 @@ module.exports = class LockHydrator {
 
       Lock.findOne(query).then(function(lock) {
         req.lock = lock;
-      }).catch(logAndSendError(res, next)).then(function() {
         return next();
-      });
+      }).catch(logAndSendError(res, next));
     };
   }
 };

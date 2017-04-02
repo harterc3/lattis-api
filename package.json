@@ -18,5 +18,13 @@
     "node-restify-validation": "^1.1.1",
     "restify": "^4.3.0",
     "sequelize": "^3.30.4"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0",
+    "proxyquire": "^1.7.11",
+    "sinon": "^2.1.0",
+    "sinon-chai": "^2.9.0",
+    "sinon-stub-promise": "^4.0.0"
   }
 }
