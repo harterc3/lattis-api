@@ -5,6 +5,7 @@ const User = require('../models').user;
 const bunyan = require('bunyan');
 const log = bunyan.createLogger({name: 'UserController'});
 
+// when updating user info, find out which fields the user wants updated
 const createUserDiff = (req) => {
   let changes = {};
   let fields = [];
@@ -27,10 +28,11 @@ const createUserDiff = (req) => {
   return { changes, fields };
 };
 
+// handling errors we catch
 const logAndSendError = (res, next) => {
   return (error) => {
     log.error(error);
-    res.json(500, { success: false, error });
+    res.json(500, { success: false, error: error.message });
     return next(false);
   };
 };
@@ -51,17 +53,11 @@ module.exports = class UserController {
   }
 
   static createUser(req, res, next) {
-    // TODO: validate input
-    const username = req.params.username;
-    const password = req.params.password;
-    const email = req.params.email;
-    const phoneNumber = req.params.phone_number;
-
     let user = User.build({
-      username,
-      password,
-      email,
-      phoneNumber
+      username: req.params.username,
+      password: req.params.password,
+      email: req.params.email,
+      phoneNumber: req.params.phone_number
     });
 
     user.save().then(function(savedUser) {
@@ -71,10 +67,9 @@ module.exports = class UserController {
   }
 
   // TODO: better way to do this?
-  // TODO: new JWT
   static updateUser(req, res, next) {
     const { changes, fields } = createUserDiff(req);
-
+/*
     if (changes.username || changes.email) {
       User.findOne({
         where: { $or: [
@@ -98,7 +93,7 @@ module.exports = class UserController {
           });
         }).catch(logAndSendError(res, next));
       });
-    } else {
+    } else {*/
       User.findOne({
         where: {
           id: req.decoded.id
@@ -108,9 +103,9 @@ module.exports = class UserController {
           const newToken = AuthenticationController.createJwtForUser(updatedUser);
           res.json(200, { success: true, user: updatedUser, token: newToken });
           return next();
-        });
+        }, logAndSendError(res, next));
       }).catch(logAndSendError(res, next));
-    }
+    //}
   }
 
   static getUserById(req, res, next) {

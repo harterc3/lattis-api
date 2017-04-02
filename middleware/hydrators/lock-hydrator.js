@@ -6,6 +6,15 @@ const User = models.user;
 const bunyan = require('bunyan');
 const log = bunyan.createLogger({name: 'LockHydrator'});
 
+// handling errors we catch
+const logAndSendError = (res, next) => {
+  return (error) => {
+    log.error(error);
+    res.json(500, { success: false, error: error.message });
+    return next(false);
+  };
+};
+
 module.exports = class LockHydrator {
   static hydrate(lockIdParamName, includeAssociations = false) {
     return function(req, res, next) {
@@ -20,17 +29,16 @@ module.exports = class LockHydrator {
           macId: lockId
         }
       };
+
       if (includeAssociations) {
         query.include = [{
           model: User, as: 'user'
-        }]
+        }];
       }
 
       Lock.findOne(query).then(function(lock) {
         req.lock = lock;
-      }).catch(function(error) {
-        log.error(error);
-      }).then(function() {
+      }).catch(logAndSendError(res, next)).then(function() {
         return next();
       });
     };

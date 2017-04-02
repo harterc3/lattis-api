@@ -1,6 +1,7 @@
 "use strict";
 
 const restify = require('restify');
+const restifyValidation = require('node-restify-validation');
 const bunyan = require('bunyan');
 
 const server = restify.createServer({
@@ -10,6 +11,12 @@ const server = restify.createServer({
 server.use(restify.queryParser());
 server.use(restify.bodyParser());
 server.use(restify.CORS({}));
+
+server.use(restifyValidation.validationPlugin({
+  errorsAsArray: true,
+  forbidUndefinedVariables: false,
+  errorHandler: restify.errors.InvalidArgumentError
+}));
 
 server.on('uncaughtException', restify.auditLogger({
   log: bunyan.createLogger({

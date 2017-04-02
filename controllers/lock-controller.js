@@ -5,6 +5,15 @@ const User = require('../models').user;
 const bunyan = require('bunyan');
 const log = bunyan.createLogger({name: 'LockController'});
 
+// handling errors we catch
+const logAndSendError = (res, next) => {
+  return (error) => {
+    log.error(error);
+    res.json(500, { success: false, error: error.message });
+    return next(false);
+  };
+};
+
 module.exports = class LockController {
 
   static getLocks(req, res, next) {
@@ -26,14 +35,7 @@ module.exports = class LockController {
         }
       });
       return next();
-    }).catch(function(error) {
-      log.error(error);
-      res.json({
-        success: false,
-        error
-      });
-      return next(false);
-    });
+    }).catch(logAndSendError(res, next));
   }
 
   static createLock(req, res, next) {
@@ -59,18 +61,9 @@ module.exports = class LockController {
         user.addLock(lock).then(() => {
           res.json(200, { success: true, lock });
           return next();
-        }).catch(function(error) {
-          log.error(error);
-          return next(false);
-        });
-      }).catch(function(error) {
-        log.error(error);
-        return next(false);
-      });
-    }).catch(function(error) {
-      log.error(error);
-      return next(false);
-    });
+        }).catch(logAndSendError(res, next));
+      }).catch(logAndSendError(res, next));
+    }).catch(logAndSendError(res, next));
   }
 
   static updateLock(req, res, next) {
@@ -95,11 +88,7 @@ module.exports = class LockController {
     }, { fields: ['name'] }).then((updatedLock) => {
       res.json(200, { success: true, updatedLock });
       return next();
-    }, (error) => {
-      log.error(error);
-      res.json(500, { success: false, error });
-      return next(false);
-    });
+    }, logAndSendError(res, next));
   }
 
   static deleteLock(req, res, next) {
@@ -112,10 +101,7 @@ module.exports = class LockController {
     }).then(() => {
       res.json(202, { success: true });
       return next();
-    }).catch((error) => {
-      log.error(error);
-      return next(false);
-    });
+    }).catch(logAndSendError(res, next));
   }
 
   static shareLock(req, res, next) {
@@ -137,15 +123,8 @@ module.exports = class LockController {
       req.lock.addUser(user).then((lock) => {
         res.json(200, { success: true, lock });
         return next();
-      }).catch(function(error) {
-        log.error(error);
-        return next(false);
-      });
+      }).catch(logAndSendError(res, next));
       return next();
-    }).catch(function(error) {
-      log.error(error);
-      res.json(500, { success: false, error });
-      return next(false);
-    });
+    }).catch(logAndSendError(res, next));
   }
 };
