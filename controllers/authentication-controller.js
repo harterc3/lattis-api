@@ -10,7 +10,7 @@ module.exports = class AuthenticationController {
 
   static authenticate(req, res, next) {
     User.findOne({
-      where: {username: req.params.username}
+      where: { username: req.params.username }
     }).then((user) => {
       if (!user) {
         res.json({success: false, error: 'Authentication failed. User not found.'});
@@ -20,9 +20,7 @@ module.exports = class AuthenticationController {
         res.json({success: false, error: 'Authentication failed. Wrong password.'});
         return next(false);
       }
-      const token = jwt.sign(user.dataValues, config.secret, {
-        expiresIn: 3600
-      });
+      const token = this.createJwtForUser(user.dataValues);
       res.json({
         success: true,
         token: token
@@ -38,9 +36,9 @@ module.exports = class AuthenticationController {
     });
   }
 
-  static createJwtForUser(user) {
-    return jwt.sign(user.dataValues, config.secret, {
-      expiresIn: 3600
+  static createJwtForUser(userValues) {
+    return jwt.sign(userValues, config.jsonWebToken.secret, {
+      expiresIn: config.jsonWebToken.expiresIn
     });
   }
 };

@@ -11,8 +11,6 @@ const LockHydrator = require('./middleware/hydrators/lock-hydrator');
 module.exports = function(server) {
 
   // register new user
-  //server.post('/users', UserController.createUser);
-
   server.post({ url: '/users', validation: {
     resources: {
       username: { isString: true, isRequired: true, min: 8 },
@@ -23,8 +21,6 @@ module.exports = function(server) {
   }}, UserController.createUser);
 
   // authenticate an existing user
-  //server.post('/authenticate', AuthenticationController.authenticate);
-
   server.post({ url: '/authenticate', validation: {
     resources: {
       username: { isString: true, isRequired: true, min: 8 },
@@ -36,8 +32,6 @@ module.exports = function(server) {
   server.use(Authenticator.verifyUser);
 
   // get info about current user
-  //server.get('/me', UserController.getMe);
-
   server.get({ url: '/me', validation: {
     headers: {
       "x-access-token": { isRequired: true }
@@ -45,8 +39,6 @@ module.exports = function(server) {
   }}, UserController.getMe);
 
   // update current user
-  //server.put('/me', UserController.updateUser);
-
   server.put({ url: '/me', validation: {
     headers: {
       "x-access-token": { isRequired: true }
@@ -60,8 +52,6 @@ module.exports = function(server) {
   }}, UserController.updateUser);
 
   // get locks owned by current user
-  //server.get('/locks', LockController.getLocks);
-
   server.get({ url: '/locks', validation: {
     headers: {
       "x-access-token": { isRequired: true }
@@ -69,8 +59,6 @@ module.exports = function(server) {
   }}, LockController.getLocks);
 
   // create new lock for current user
-  //server.post('/locks', LockController.createLock);
-
   server.post({ url: '/locks', validation: {
     headers: {
       "x-access-token": { isRequired: true }
@@ -82,8 +70,6 @@ module.exports = function(server) {
   }}, LockController.createLock);
 
   // update a lock
-  //server.put('/locks/:id', LockHydrator.hydrate('id'), LockController.updateLock);
-
   server.put({ url: '/locks/:id', validation: {
     headers: {
       "x-access-token": { isRequired: true }
@@ -95,8 +81,6 @@ module.exports = function(server) {
   }}, LockHydrator.hydrate('id'), LockController.updateLock);
 
   // delete a lock
-  //server.del('/locks/:id', LockHydrator.hydrate('id'), LockController.deleteLock);
-
   server.del({ url: '/locks/:id', validation: {
     headers: {
       "x-access-token": { isRequired: true }
@@ -107,8 +91,6 @@ module.exports = function(server) {
   }}, LockHydrator.hydrate('id'), LockController.deleteLock);
 
   // share lock with phone number
-  //server.put('/locks/:id/share', LockHydrator.hydrate('id'), LockController.shareLock);
-
   server.put({ url: '/locks/:id/share', validation: {
     headers: {
       "x-access-token": { isRequired: true }

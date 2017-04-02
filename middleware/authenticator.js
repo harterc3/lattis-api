@@ -8,7 +8,7 @@ module.exports = class Authenticator {
   static verifyUser(req, res, next) {
     const token = req.params.token || req.headers['x-access-token'];
     if (token) {
-      jwt.verify(token, config.secret, (err, decoded) => {
+      jwt.verify(token, config.jsonWebToken.secret, (err, decoded) => {
         if (err) {
           res.json({success: false, message: 'Failed to authenticate token.'});
           return next(false);

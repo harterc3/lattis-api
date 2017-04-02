@@ -1,3 +1,6 @@
 {
-  "secret": "82c9f102dc8402547ba24310b9fcb99033e357d8f9ad134b0ca5667be5a74184"
+  "jsonWebToken": {
+    "secret": "82c9f102dc8402547ba24310b9fcb99033e357d8f9ad134b0ca5667be5a74184",
+    "expiresIn": 3600
+  }
 }
