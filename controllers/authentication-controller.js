@@ -4,8 +4,6 @@ const ControllerBase = require('./controller-base');
 const User = require('../models').user;
 const jwt = require('jsonwebtoken');
 const config = require('config');
-const bunyan = require('bunyan');
-const log = bunyan.createLogger({name: 'AuthenticationController'});
 
 module.exports = class AuthenticationController extends ControllerBase {
 
