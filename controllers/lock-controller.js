@@ -11,7 +11,7 @@ module.exports = class LockController extends ControllerBase {
       const self = this;
       User.findOne({
         where: {
-          id: req.decoded.id
+          id: req.jwtUser.id
         },
         include: [{
           model: Lock, as: 'locks'
@@ -39,7 +39,7 @@ module.exports = class LockController extends ControllerBase {
       const self = this;
       User.findOne({
         where: {
-          id: req.decoded.id
+          id: req.jwtUser.id
         }
       }).then((user) => {
         if (!user) {
@@ -72,7 +72,7 @@ module.exports = class LockController extends ControllerBase {
       if (!req.lock) {
         return next(false);
       }
-      if (req.lock.ownerId !== req.decoded.id) {
+      if (req.lock.ownerId !== req.jwtUser.id) {
         res.json(400, {success: false, error: 'Access Forbidden'});
         return next(false);
       }
@@ -92,7 +92,7 @@ module.exports = class LockController extends ControllerBase {
 
   deleteLock() {
     return (req, res, next) => {
-      if (req.lock.ownerId !== req.decoded.id) {
+      if (req.lock.ownerId !== req.jwtUser.id) {
         res.json(400, {success: false, error: 'Access Forbidden'});
         return next(false);
       }
@@ -108,7 +108,7 @@ module.exports = class LockController extends ControllerBase {
 
   shareLock() {
     return (req, res, next) => {
-      if (req.lock.ownerId !== req.decoded.id) {
+      if (req.lock.ownerId !== req.jwtUser.id) {
         res.json(400, {success: false, error: 'Access Forbidden'});
         return next(false);
       }

@@ -1,16 +1,16 @@
 "use strict";
 
-const config = require('config');
-
+// custom middleware
 const Authenticator = require('./middleware/authenticator');
-const AuthenticationController = require('./controllers/authentication-controller');
-const UserController = require('./controllers/user-controller');
-const LockController = require('./controllers/lock-controller');
 const LockHydrator = require('./middleware/hydrators/lock-hydrator');
+
+// controllers
+const LockController = require('./controllers/lock-controller');
+const UserController = require('./controllers/user-controller');
+
 
 module.exports = function(server) {
   const userController = new UserController();
-  const authenticationController = new AuthenticationController();
   const lockController = new LockController();
 
   // register new user
@@ -29,7 +29,7 @@ module.exports = function(server) {
       username: { isString: true, isRequired: true, min: 8 },
       password: { isString: true, isRequired: true, min: 8 }
     }
-  }}, authenticationController.authenticate());
+  }}, userController.authenticateUser());
 
   // for the rest of the endpoints, make sure the user has access token
   server.use(Authenticator.verifyUser);

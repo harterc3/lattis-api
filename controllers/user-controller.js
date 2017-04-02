@@ -1,26 +1,26 @@
 "use strict";
 
 const ControllerBase = require('./controller-base');
-const AuthenticationController = require('./authentication-controller');
+const JwtHelper = require('../helpers/jwt-helper');
 const User = require('../models').user;
 
 // when updating user info, find out which fields the user wants updated
 const createUserDiff = (req) => {
   let changes = {};
   let fields = [];
-  if (req.params.username && req.decoded.username !== req.params.username) {
+  if (req.params.username && req.jwtUser.username !== req.params.username) {
     changes.username = req.params.username;
     fields.push('username');
   }
-  if (req.params.password && req.decoded.password !== req.params.password) {
+  if (req.params.password && req.jwtUser.password !== req.params.password) {
     changes.password = req.params.password;
     fields.push('password');
   }
-  if (req.params.email && req.decoded.email !== req.params.email) {
+  if (req.params.email && req.jwtUser.email !== req.params.email) {
     changes.email = req.params.email;
     fields.push('email');
   }
-  if (req.params.phoneNumber && req.decoded.phoneNumber !== req.params.phoneNumber) {
+  if (req.params.phoneNumber && req.jwtUser.phoneNumber !== req.params.phoneNumber) {
     changes.phoneNumber = req.params.phoneNumber;
     fields.push('phoneNumber');
   }
@@ -29,11 +29,35 @@ const createUserDiff = (req) => {
 
 module.exports = class UserController extends ControllerBase {
 
+  authenticateUser() {
+    return (req, res, next) => {
+      const self = this;
+      User.findOne({
+        where: {username: req.params.username}
+      }).then((user) => {
+        if (!user) {
+          res.json({success: false, error: 'Authentication failed. User not found.'});
+          return next(false);
+        }
+        if (!user.hasCorrectPassword(req.params.password)) {
+          res.json({success: false, error: 'Authentication failed. Wrong password.'});
+          return next(false);
+        }
+        const token = JwtHelper.createJwt(user.dataValues);
+        res.json({
+          success: true,
+          token: token
+        });
+        return next();
+      }).catch(self.logAndSendError(res, next));
+    };
+  }
+
   getMe() {
     return (req, res, next) => {
       const self = this;
       User.findOne({
-        where: {id: req.decoded.id}
+        where: {id: req.jwtUser.id}
       }).then(function (user) {
         if (!user) {
           res.status(404).send({success: false, message: 'User not found.'});
@@ -85,11 +109,11 @@ module.exports = class UserController extends ControllerBase {
        }
        User.findOne({
        where: {
-       id: req.decoded.id
+       id: req.jwtUser.id
        }
        }).then((user) => {
        user.update(changes, { fields }).then((updatedUser) => {
-       const newToken = AuthenticationController.createJwtForUser(updatedUser);
+       const newToken = JwtHelper.createJwt(updatedUser);
        res.json(200, { success: true, user: updatedUser, token: newToken });
        return next();
        });
@@ -98,33 +122,16 @@ module.exports = class UserController extends ControllerBase {
        } else {*/
       User.findOne({
         where: {
-          id: req.decoded.id
+          id: req.jwtUser.id
         }
       }).then((user) => {
         user.update(changes, {fields}).then((updatedUser) => {
-          const newToken = AuthenticationController.createJwtForUser(updatedUser.dataValues);
+          const newToken = JwtHelper.createJwt(updatedUser.dataValues);
           res.json(200, {success: true, user: updatedUser, token: newToken});
           return next();
         }, self.logAndSendError(res, next));
       }).catch(self.logAndSendError(res, next));
       //}
     };
-  }
-
-  getUserById() {
-    return (req, res, next) => {
-      const self = this;
-      User.findOne({
-        where: {id: req.params.id}
-      }).then(function (user) {
-        if (!user) {
-          res.status(404).send({success: false, message: 'User not found.'});
-          return next(false);
-        }
-        res.json({success: true, user});
-      }).catch(self.logAndSendError(res, next)).then(function () {
-        return next();
-      });
-    }
   }
 };
