@@ -65,21 +65,19 @@ module.exports = class LockController extends ControllerBase {
   updateLock() {
     return (req, res, next) => {
       const newName = req.params.name;
-      if (!newName) {
-        res.json(400, {success: false, error: 'No \'name\' parameter given.'});
-        return next(false);
-      }
       if (!req.lock) {
+        res.json(404, {success: false, error: 'Lock not found.'});
         return next(false);
       }
       if (req.lock.ownerId !== req.jwtUser.id) {
-        res.json(400, {success: false, error: 'Access Forbidden'});
+        res.json(403, {success: false, error: 'Access Forbidden'});
         return next(false);
       }
       if (req.lock.name === newName) {
         res.json(200, {success: true, lock: req.lock});
         return next();
       }
+
       const self = this;
       req.lock.update({
         name: newName
@@ -96,6 +94,7 @@ module.exports = class LockController extends ControllerBase {
         res.json(400, {success: false, error: 'Access Forbidden'});
         return next(false);
       }
+
       const self = this;
       Lock.destroy({
         where: {macId: req.params.id}

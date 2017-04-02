@@ -90,36 +90,11 @@ module.exports = class UserController extends ControllerBase {
     };
   }
 
-  // TODO: better way to do this?
   updateUser() {
     return (req, res, next) => {
       const {changes, fields} = createUserDiff(req);
+
       const self = this;
-      /*
-       if (changes.username || changes.email) {
-       User.findOne({
-       where: { $or: [
-       { username: req.params.username },
-       { email: req.params.email }
-       ]}
-       }).then((user) => {
-       if (user) {
-       res.json(400, { success: false, message: 'Username or Email is already taken.' });
-       return next(false);
-       }
-       User.findOne({
-       where: {
-       id: req.jwtUser.id
-       }
-       }).then((user) => {
-       user.update(changes, { fields }).then((updatedUser) => {
-       const newToken = JwtHelper.createJwt(updatedUser);
-       res.json(200, { success: true, user: updatedUser, token: newToken });
-       return next();
-       });
-       }).catch(self.logAndSendError(res, next));
-       });
-       } else {*/
       User.findOne({
         where: {
           id: req.jwtUser.id
@@ -131,7 +106,6 @@ module.exports = class UserController extends ControllerBase {
           return next();
         }, self.logAndSendError(res, next));
       }).catch(self.logAndSendError(res, next));
-      //}
     };
   }
 };
