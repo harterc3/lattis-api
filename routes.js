@@ -9,6 +9,9 @@ const LockController = require('./controllers/lock-controller');
 const LockHydrator = require('./middleware/hydrators/lock-hydrator');
 
 module.exports = function(server) {
+  const userController = new UserController();
+  const authenticationController = new AuthenticationController();
+  const lockController = new LockController();
 
   // register new user
   server.post({ url: '/users', validation: {
@@ -18,7 +21,7 @@ module.exports = function(server) {
       email: { isEmail: true, isRequired: true },
       phone_number: { isString: true, isRequired: true, min: 5, max: 11 }
     }
-  }}, UserController.createUser);
+  }}, userController.createUser());
 
   // authenticate an existing user
   server.post({ url: '/authenticate', validation: {
@@ -26,7 +29,7 @@ module.exports = function(server) {
       username: { isString: true, isRequired: true, min: 8 },
       password: { isString: true, isRequired: true, min: 8 }
     }
-  }}, AuthenticationController.authenticate);
+  }}, authenticationController.authenticate());
 
   // for the rest of the endpoints, make sure the user has access token
   server.use(Authenticator.verifyUser);
@@ -36,7 +39,7 @@ module.exports = function(server) {
     headers: {
       "x-access-token": { isRequired: true }
     }
-  }}, UserController.getMe);
+  }}, userController.getMe());
 
   // update current user
   server.put({ url: '/me', validation: {
@@ -49,14 +52,14 @@ module.exports = function(server) {
       email: { isEmail: true, isRequired: false },
       phone_number: { isString: true, isRequired: false, min: 5, max: 11 }
     }
-  }}, UserController.updateUser);
+  }}, userController.updateUser());
 
   // get locks owned by current user
   server.get({ url: '/locks', validation: {
     headers: {
       "x-access-token": { isRequired: true }
     }
-  }}, LockController.getLocks);
+  }}, lockController.getLocks());
 
   // create new lock for current user
   server.post({ url: '/locks', validation: {
@@ -67,7 +70,7 @@ module.exports = function(server) {
       mac_id: { isString: true, isRequired: true },
       name: { isString: true, isRequired: true }
     }
-  }}, LockController.createLock);
+  }}, lockController.createLock());
 
   // update a lock
   server.put({ url: '/locks/:id', validation: {
@@ -78,7 +81,7 @@ module.exports = function(server) {
       id: { isString: true, isRequired: true },
       name: { isString: true, isRequired: true }
     }
-  }}, LockHydrator.hydrate('id'), LockController.updateLock);
+  }}, LockHydrator.hydrate('id'), lockController.updateLock());
 
   // delete a lock
   server.del({ url: '/locks/:id', validation: {
@@ -88,7 +91,7 @@ module.exports = function(server) {
     resources: {
       id: { isString: true, isRequired: true }
     }
-  }}, LockHydrator.hydrate('id'), LockController.deleteLock);
+  }}, LockHydrator.hydrate('id'), lockController.deleteLock());
 
   // share lock with phone number
   server.put({ url: '/locks/:id/share', validation: {
@@ -99,7 +102,7 @@ module.exports = function(server) {
       id: { isString: true, isRequired: true },
       phone_number: { isString: true, isRequired: true, min: 5, max: 11 }
     }
-  }}, LockHydrator.hydrate('id'), LockController.shareLock);
+  }}, LockHydrator.hydrate('id'), lockController.shareLock());
 
   // base url
   server.get('/', function (req, res, next) {
