@@ -16,18 +16,18 @@ module.exports = function(server) {
   // register new user
   server.post({ url: '/users', validation: {
     resources: {
-      username: { isString: true, isRequired: true, min: 8 },
-      password: { isString: true, isRequired: true, min: 8 },
+      username: { isString: true, isRequired: true },
+      password: { isString: true, isRequired: true },
       email: { isEmail: true, isRequired: true },
-      phone_number: { isString: true, isRequired: true, min: 5, max: 11 }
+      phone_number: { isString: true, isRequired: true }
     }
   }}, userController.createUser());
 
   // authenticate an existing user
   server.post({ url: '/authenticate', validation: {
     resources: {
-      username: { isString: true, isRequired: true, min: 8 },
-      password: { isString: true, isRequired: true, min: 8 }
+      username: { isString: true, isRequired: true },
+      password: { isString: true, isRequired: true }
     }
   }}, userController.authenticateUser());
 
@@ -47,10 +47,10 @@ module.exports = function(server) {
       "x-access-token": { isRequired: true }
     },
     resources: {
-      username: { isString: true, isRequired: false, min: 8 },
-      password: { isString: true, isRequired: false, min: 8 },
+      username: { isString: true, isRequired: false },
+      password: { isString: true, isRequired: false },
       email: { isEmail: true, isRequired: false },
-      phone_number: { isString: true, isRequired: false, min: 5, max: 11 }
+      phone_number: { isString: true, isRequired: false }
     }
   }}, userController.updateUser());
 
@@ -100,7 +100,7 @@ module.exports = function(server) {
     },
     resources: {
       id: { isString: true, isRequired: true },
-      phone_number: { isString: true, isRequired: true, min: 5, max: 11 }
+      phone_number: { isString: true, isRequired: true }
     }
   }}, LockHydrator.hydrate('id'), lockController.shareLock());
 
