@@ -33,18 +33,18 @@ module.exports = class UserController extends ControllerBase {
     return (req, res, next) => {
       const self = this;
       User.findOne({
-        where: {username: req.params.username}
+        where: { username: req.params.username }
       }).then((user) => {
         if (!user) {
-          res.json({success: false, error: 'Authentication failed. User not found.'});
+          res.json(404, { success: false, error: 'Authentication failed. User not found.' });
           return next(false);
         }
         if (!user.hasCorrectPassword(req.params.password)) {
-          res.json({success: false, error: 'Authentication failed. Wrong password.'});
+          res.json(400, { success: false, error: 'Authentication failed. Wrong password.' });
           return next(false);
         }
         const token = JwtHelper.createJwt(user.dataValues);
-        res.json({
+        res.json(200, {
           success: true,
           token: token
         });
@@ -60,10 +60,10 @@ module.exports = class UserController extends ControllerBase {
         where: {id: req.jwtUser.id}
       }).then(function (user) {
         if (!user) {
-          res.status(404).send({success: false, message: 'User not found.'});
+          res.json(404, {success: false, message: 'User not found.'});
           return next(false);
         }
-        res.json({success: true, user});
+        res.json(200, { success: true, user });
         return next();
       }).catch(self.logAndSendError(res, next));
     };
@@ -84,9 +84,9 @@ module.exports = class UserController extends ControllerBase {
           res.json(400, {success: false, message: 'User could not be created.'});
           return next(false);
         }
-        res.json(200, {success: true, user: savedUser});
+        res.json(201, {success: true, user: savedUser});
+        return next();
       }).catch(self.logAndSendError(res, next));
-      return next();
     };
   }
 
@@ -100,7 +100,15 @@ module.exports = class UserController extends ControllerBase {
           id: req.jwtUser.id
         }
       }).then((user) => {
+        if (!user) {
+          res.json(404, {success: false, message: 'User not found.'});
+          return next(false);
+        }
         user.update(changes, {fields}).then((updatedUser) => {
+          if (!updatedUser) {
+            res.json(400, {success: false, message: 'User could not be updated.'});
+            return next(false);
+          }
           const newToken = JwtHelper.createJwt(updatedUser.dataValues);
           res.json(200, {success: true, user: updatedUser, token: newToken});
           return next();

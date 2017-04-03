@@ -37,8 +37,6 @@ describe('LockHydrator', function() {
     this.nextSpy = sinon.spy();
 
     this.lockIdParamName = 'id';
-
-    //const resolveStub = sinon.stub(deferred, "resolve").returns({then:function(){}});
   });
 
   describe('#hydrate', function() {
