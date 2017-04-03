@@ -55,6 +55,79 @@ Tests in this project are run using `mocha`:
 
 (If this doesn't work, you may need to run `npm install -g mocha` first.)
 
+## Endpoints
+  ##### Register new user
+  - Url: `/users`
+  - Method: `POST`
+  - Params:
+    - `username` (required, string)
+    - `password` (required, string)
+    - `email` (required, string)
+    - `phone_number` (required, string)
+    
+  ##### Authenticate an existing user
+  - Url: `/authenticate`
+  - Method: `POST`
+  - Params:
+    - `username` (required, string)
+    - `password` (required, string)
+  - __Endpoint will return access token to be used on future calls__
+  
+  ##### Get current user's info
+  - Url: `/me`
+  - Method: `GET`
+  - Headers:
+    - `x-access-token` (required, (comes from authentication endpoint))
+    
+  ##### Update current user's info
+  - Url: `/me`
+  - Method: `PUT`
+  - Headers:
+    - `x-access-token` (required, (comes from authentication endpoint))
+  - Params:
+    - `username` (optional, string)
+    - `password` (optional, string)
+    - `email` (optional, string)
+    - `phone_number` (optional, string)
+  - __Endpoint will return access token to be used on future calls__
+    
+  ##### Get current user's locks (owned and shared)
+  - Url: `/locks`
+  - Method: `GET`
+  - Headers:
+    - `x-access-token` (required, (comes from authentication endpoint))
+    
+  ##### Create new lock for current user
+  - Url: `/locks`
+  - Method: `POST`
+  - Headers:
+    - `x-access-token` (required, (comes from authentication endpoint))
+  - Params:
+    - `mac_id` (required, string)
+    - `name` (required, string)
+    
+  ##### Update a lock
+  - Url: `/locks/:id`
+  - Method: `PUT`
+  - Headers:
+    - `x-access-token` (required, (comes from authentication endpoint))
+  - Params:
+    - `name` (required, string)
+    
+  ##### Delete a lock
+  - Url: `/locks/:id`
+  - Method: `DELETE`
+  - Headers:
+    - `x-access-token` (required, (comes from authentication endpoint))
+    
+  ##### Share lock with phone number
+  - Url: `/locks/:id/share`
+  - Method: `PUT`
+  - Headers:
+    - `x-access-token` (required, (comes from authentication endpoint))
+  - Params:
+    - `phone_number` (required, string)
+
 ## Project Organization
 The API is divided into middleware, controllers, helpers, and models.
 
