@@ -4,7 +4,8 @@
   "description": "Web API for Lattis mobile apps",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "NODE_ENV=development node index.js",
+    "test": "mocha --recursive"
   },
   "author": "Cory Harter",
   "license": "ISC",

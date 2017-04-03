@@ -19,7 +19,11 @@ module.exports = class LockController extends ControllerBase {
           model: Lock, as: 'sharedLocks'
         }]
       }).then(function (userData) {
-        res.json({
+        if (!userData) {
+          res.json(404, { success: false, error: 'User not found.' });
+          return next(false);
+        }
+        res.json(200, {
           success: true,
           locks: {
             owned: userData.locks,
@@ -43,6 +47,7 @@ module.exports = class LockController extends ControllerBase {
         }
       }).then((user) => {
         if (!user) {
+          res.json(404, { success: false, error: 'User not found.'});
           return next(false);
         }
         Lock.create({
@@ -51,10 +56,11 @@ module.exports = class LockController extends ControllerBase {
           ownerId: user.id
         }).then((lock) => {
           if (!lock) {
+            res.json(400, { success: false, error: 'Lock creation failed.'});
             return next(false);
           }
           user.addLock(lock).then(() => {
-            res.json(200, {success: true, lock});
+            res.json(201, {success: true, lock});
             return next();
           }).catch(self.logAndSendError(res, next));
         }).catch(self.logAndSendError(res, next));
@@ -75,13 +81,17 @@ module.exports = class LockController extends ControllerBase {
       }
       if (req.lock.name === newName) {
         res.json(200, {success: true, lock: req.lock});
-        return next();
+        return next(false);
       }
 
       const self = this;
       req.lock.update({
         name: newName
       }, {fields: ['name']}).then((updatedLock) => {
+        if (!updatedLock) {
+          res.json(400, { success: false, error: 'Lock update failed.' });
+          return next(false);
+        }
         res.json(200, {success: true, updatedLock});
         return next();
       }, self.logAndSendError(res, next));
@@ -91,7 +101,7 @@ module.exports = class LockController extends ControllerBase {
   deleteLock() {
     return (req, res, next) => {
       if (req.lock.ownerId !== req.jwtUser.id) {
-        res.json(400, {success: false, error: 'Access Forbidden'});
+        res.json(403, {success: false, error: 'Access Forbidden'});
         return next(false);
       }
 
@@ -99,7 +109,7 @@ module.exports = class LockController extends ControllerBase {
       Lock.destroy({
         where: {macId: req.params.id}
       }).then(() => {
-        res.json(202, {success: true});
+        res.json(200, {success: true});
         return next();
       }).catch(self.logAndSendError(res, next));
     };
@@ -108,7 +118,7 @@ module.exports = class LockController extends ControllerBase {
   shareLock() {
     return (req, res, next) => {
       if (req.lock.ownerId !== req.jwtUser.id) {
-        res.json(400, {success: false, error: 'Access Forbidden'});
+        res.json(403, {success: false, error: 'Access Forbidden'});
         return next(false);
       }
 
@@ -120,7 +130,7 @@ module.exports = class LockController extends ControllerBase {
         }
       }).then(function (user) {
         if (!user) {
-          res.status(404).send({success: false, message: 'User not found.'});
+          res.json(404, {success: false, message: 'User not found.'});
           return next(false);
         }
         req.lock.addUser(user).then((lock) => {

@@ -37,13 +37,11 @@ describe('UserController', function() {
     };
 
     this.nextSpy = sinon.spy();
-
-    this.lockIdParamName = 'id';
   });
 
   describe('#authenticateUser', function() {
     beforeEach(function() {
-      this.func = this.controller.authenticateUser(this.lockIdParamName);
+      this.func = this.controller.authenticateUser();
       expect(this.func).to.be.a('function');
     });
 
