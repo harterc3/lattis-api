@@ -16,7 +16,8 @@ module.exports = {
           unique: true
         },
         password_hash: {
-          type: Sequelize.STRING
+          type: Sequelize.STRING,
+          allowNull: false
         },
         email: {
           type: Sequelize.STRING,
@@ -26,6 +27,7 @@ module.exports = {
         phone_number: {
           type: Sequelize.STRING,
           allowNull: false,
+          unique: true
         },
         created_at: {
           type: 'TIMESTAMP',
