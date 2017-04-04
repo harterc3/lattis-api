@@ -40,8 +40,9 @@ Navigate into the newly created graffiti-api directory and run `npm i` to instal
 
 One of those dependencies is Sequelize. This is the ORM we are using. It helps us with data migrations. Make sure your mySQL is running locally. Create a database called `lattis`. If you are prompted for which character encoding you want for your database, use `utf8mb4`.
 
-Now that you have an empty database. Run our migration:
+Now that you have an empty database, install the Sequelize CLI and use it to run our migration:
 
+`npm install -g sequelize-cli`
 `sequelize db:migrate`
 
 You should now have database tables for users, drawings, and reports. Now you should be able to run the API.
