@@ -30,47 +30,57 @@ const createUserDiff = (req) => {
 module.exports = class UserController extends ControllerBase {
 
   authenticateUser() {
-    return (req, res, next) => {
-      const self = this;
-      User.findOne({
-        where: { username: req.params.username }
-      }).then((user) => {
-        if (!user) {
-          res.json(404, { success: false, error: 'Authentication failed. User not found.' });
-          return next(false);
-        }
-        if (!user.hasCorrectPassword(req.params.password)) {
-          res.json(400, { success: false, error: 'Authentication failed. Wrong password.' });
-          return next(false);
-        }
-        const token = JwtHelper.createJwt(user.dataValues);
-        res.json(200, {
-          success: true,
-          token: token
+    return async (req, res, next) => {
+      let user = null;
+      try {
+        user = await User.findOne({
+          where: { username: req.params.username }
         });
-        return next();
-      }).catch(self.logAndSendError(res, next));
+      } catch (error) {
+        this.logAndSendError(error, res, next)
+      }
+
+      if (!user) {
+        res.json(404, { success: false, error: 'Authentication failed. User not found.' });
+        return next(false);
+      }
+      if (!user.hasCorrectPassword(req.params.password)) {
+        res.json(400, { success: false, error: 'Authentication failed. Wrong password.' });
+        return next(false);
+      }
+
+      const token = JwtHelper.createJwt(user.dataValues);
+      res.json(200, {
+        success: true,
+        token: token
+      });
+      return next();
     };
   }
 
   getMe() {
-    return (req, res, next) => {
-      const self = this;
-      User.findOne({
-        where: {id: req.jwtUser.id}
-      }).then(function (user) {
-        if (!user) {
-          res.json(404, {success: false, message: 'User not found.'});
-          return next(false);
-        }
-        res.json(200, { success: true, user });
-        return next();
-      }).catch(self.logAndSendError(res, next));
+    return async (req, res, next) => {
+      let user = null;
+      try {
+        user = await User.findOne({
+          where: {id: req.jwtUser.id}
+        });
+      } catch (error) {
+        this.logAndSendError(error, res, next);
+      }
+
+      if (!user) {
+        res.json(404, {success: false, message: 'User not found.'});
+        return next(false);
+      }
+
+      res.json(200, { success: true, user });
+      return next();
     };
   }
 
   createUser() {
-    return (req, res, next) => {
+    return async (req, res, next) => {
       let user = User.build({
         username: req.params.username,
         password: req.params.password,
@@ -78,42 +88,58 @@ module.exports = class UserController extends ControllerBase {
         phoneNumber: req.params.phone_number
       });
 
-      const self = this;
-      user.save().then(function (savedUser) {
-        if (!savedUser) {
-          res.json(400, {success: false, message: 'User could not be created.'});
-          return next(false);
-        }
-        res.json(201, {success: true, user: savedUser});
-        return next();
-      }).catch(self.logAndSendError(res, next));
+      let savedUser = null;
+      try {
+        savedUser = await user.save();
+      } catch (error) {
+        this.logAndSendError(error, res, next)
+      }
+
+      if (!savedUser) {
+        res.json(400, {success: false, message: 'User could not be created.'});
+        return next(false);
+      }
+
+      res.json(201, {success: true, user: savedUser});
+      return next();
     };
   }
 
   updateUser() {
-    return (req, res, next) => {
+    return async (req, res, next) => {
       const {changes, fields} = createUserDiff(req);
 
-      const self = this;
-      User.findOne({
-        where: {
-          id: req.jwtUser.id
-        }
-      }).then((user) => {
-        if (!user) {
-          res.json(404, {success: false, message: 'User not found.'});
-          return next(false);
-        }
-        user.update(changes, {fields}).then((updatedUser) => {
-          if (!updatedUser) {
-            res.json(400, {success: false, message: 'User could not be updated.'});
-            return next(false);
+      let user = null;
+      try {
+        user = await User.findOne({
+          where: {
+            id: req.jwtUser.id
           }
-          const newToken = JwtHelper.createJwt(updatedUser.dataValues);
-          res.json(200, {success: true, user: updatedUser, token: newToken});
-          return next();
-        }, self.logAndSendError(res, next));
-      }).catch(self.logAndSendError(res, next));
+        });
+      } catch (error) {
+        this.logAndSendError(error, res, next);
+      }
+
+      if (!user) {
+        res.json(404, {success: false, message: 'User not found.'});
+        return next(false);
+      }
+
+      let updatedUser = null;
+      try {
+        updatedUser = await user.update(changes, {fields});
+      } catch (error) {
+        this.logAndSendError(error, res, next);
+      }
+
+      if (!updatedUser) {
+        res.json(400, {success: false, message: 'User could not be updated.'});
+        return next(false);
+      }
+
+      const newToken = JwtHelper.createJwt(updatedUser.dataValues);
+      res.json(200, {success: true, user: updatedUser, token: newToken});
+      return next();
     };
   }
 };

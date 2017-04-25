@@ -7,69 +7,92 @@ const User = require('../models').user;
 module.exports = class LockController extends ControllerBase {
 
   getLocks() {
-    return (req, res, next) => {
-      const self = this;
-      User.findOne({
-        where: {
-          id: req.jwtUser.id
-        },
-        include: [{
-          model: Lock, as: 'locks'
-        }, {
-          model: Lock, as: 'sharedLocks'
-        }]
-      }).then(function (userData) {
-        if (!userData) {
-          res.json(404, { success: false, error: 'User not found.' });
-          return next(false);
-        }
-        res.json(200, {
-          success: true,
-          locks: {
-            owned: userData.locks,
-            shared: userData.sharedLocks
-          }
+    return async (req, res, next) => {
+      let userData = null;
+      try {
+        userData = await User.findOne({
+          where: {
+            id: req.jwtUser.id
+          },
+          include: [{
+            model: Lock, as: 'locks'
+          }, {
+            model: Lock, as: 'sharedLocks'
+          }]
         });
-        return next();
-      }).catch(self.logAndSendError(res, next));
+      } catch (error) {
+        this.logAndSendError(error, res, next);
+      }
+
+      if (!userData) {
+        res.json(404, { success: false, error: 'User not found.' });
+        return next(false);
+      }
+
+      res.json(200, {
+        success: true,
+        locks: {
+          owned: userData.locks,
+          shared: userData.sharedLocks
+        }
+      });
+      return next();
     };
   }
 
+  // TODO: this method does too much
   createLock() {
-    return (req, res, next) => {
+    return async (req, res, next) => {
       const name = req.params.name;
       const macId = req.params.mac_id;
 
-      const self = this;
-      User.findOne({
-        where: {
-          id: req.jwtUser.id
-        }
-      }).then((user) => {
-        if (!user) {
-          res.json(404, { success: false, error: 'User not found.'});
-          return next(false);
-        }
-        Lock.create({
+      // find current user
+      let user = null;
+      try {
+        user = await User.findOne({
+          where: {
+            id: req.jwtUser.id
+          }
+        });
+      } catch (error) {
+        this.logAndSendError(error, res, next);
+      }
+
+      if (!user) {
+        res.json(404, { success: false, error: 'User not found.'});
+        return next(false);
+      }
+
+      // create new lock
+      let lock = null;
+      try {
+        lock = await Lock.create({
           name,
           macId,
           ownerId: user.id
-        }).then((lock) => {
-          if (!lock) {
-            res.json(400, { success: false, error: 'Lock creation failed.'});
-            return next(false);
-          }
-          user.addLock(lock).then(() => {
-            res.json(201, {success: true, lock});
-            return next();
-          }).catch(self.logAndSendError(res, next));
-        }).catch(self.logAndSendError(res, next));
-      }).catch(self.logAndSendError(res, next));
+        });
+      } catch (error) {
+        this.logAndSendError(error, res, next);
+      }
+
+      if (!lock) {
+        res.json(400, { success: false, error: 'Lock creation failed.'});
+        return next(false);
+      }
+
+      try {
+        await user.addLock(lock);
+      } catch (error) {
+        this.logAndSendError(error, res, next);
+      }
+
+      res.json(201, {success: true, lock});
+      return next();
     };
   }
 
   updateLock() {
-    return (req, res, next) => {
+    return async (req, res, next) => {
       const newName = req.params.name;
       if (!req.lock) {
         res.json(404, {success: false, error: 'Lock not found.'});
@@ -84,61 +107,79 @@ module.exports = class LockController extends ControllerBase {
         return next(false);
       }
 
-      const self = this;
-      req.lock.update({
-        name: newName
-      }, {fields: ['name']}).then((updatedLock) => {
-        if (!updatedLock) {
-          res.json(400, { success: false, error: 'Lock update failed.' });
-          return next(false);
-        }
-        res.json(200, {success: true, updatedLock});
-        return next();
-      }, self.logAndSendError(res, next));
+      let updatedLock = null;
+      try {
+        updatedLock = await req.lock.update({
+          name: newName
+        }, {fields: ['name']});
+      } catch (error) {
+        this.logAndSendError(error, res, next)
+      }
+
+      if (!updatedLock) {
+        res.json(400, { success: false, error: 'Lock update failed.' });
+        return next(false);
+      }
+
+      res.json(200, {success: true, updatedLock});
+      return next();
     };
   }
 
   deleteLock() {
-    return (req, res, next) => {
+    return async (req, res, next) => {
       if (req.lock.ownerId !== req.jwtUser.id) {
         res.json(403, {success: false, error: 'Access Forbidden'});
         return next(false);
       }
 
-      const self = this;
-      Lock.destroy({
-        where: {macId: req.params.id}
-      }).then(() => {
-        res.json(200, {success: true});
-        return next();
-      }).catch(self.logAndSendError(res, next));
+      try {
+        await Lock.destroy({
+          where: {macId: req.params.id}
+        });
+      } catch (error) {
+        this.logAndSendError(error, res, next)
+      }
+
+      res.json(200, {success: true});
+      return next();
     };
   }
 
   shareLock() {
-    return (req, res, next) => {
+    return async (req, res, next) => {
       if (req.lock.ownerId !== req.jwtUser.id) {
         res.json(403, {success: false, error: 'Access Forbidden'});
         return next(false);
       }
 
       const phoneNumber = req.params.phone_number;
-      const self = this;
-      User.findOne({
-        where: {
-          phoneNumber
-        }
-      }).then(function (user) {
-        if (!user) {
-          res.json(404, {success: false, message: 'User not found.'});
-          return next(false);
-        }
-        req.lock.addUser(user).then((lock) => {
-          res.json(200, {success: true, lock});
-          return next();
-        }).catch(self.logAndSendError(res, next));
-        return next();
-      }).catch(self.logAndSendError(res, next));
+
+      let user = null;
+      try {
+        user = await User.findOne({
+          where: {
+            phoneNumber
+          }
+        });
+      } catch (error) {
+        this.logAndSendError(error, res, next);
+      }
+
+      if (!user) {
+        res.json(404, {success: false, message: 'User not found.'});
+        return next(false);
+      }
+
+      let lock = null;
+      try {
+        lock = await req.lock.addUser(user);
+      } catch (error) {
+        this.logAndSendError(error, res, next);
+      }
+
+      res.json(200, {success: true, lock});
+      return next();
     };
   }
 };

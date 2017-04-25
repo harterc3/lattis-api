@@ -42,26 +42,25 @@ describe('LockHydrator', function() {
   describe('#hydrate', function() {
     it('should return a function', function(done) {
       const result = this.hydrator.hydrate(this.lockIdParamName);
-      expect(result).to.be.a('function');
+      expect(result).to.be.a('asyncfunction');
       done();
     });
   });
 
   describe('->hydrate middleware function', function() {
-    it('should give 400 response if no lock id route param is found', function(done) {
+    it('should give 400 response if no lock id route param is found', async function() {
       const func = this.hydrator.hydrate(this.lockIdParamName);
       const req = {
         params: {}
       };
 
-      func(req, this.res, this.nextSpy);
+      await func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(400);
       expect(this.nextSpy).to.be.calledWith(false);
-      done();
     });
 
-    it('should query for lock with id value', function(done) {
+    it('should query for lock with id value', async function() {
       const func = this.hydrator.hydrate(this.lockIdParamName);
       const req = {
         params: {}
@@ -70,11 +69,10 @@ describe('LockHydrator', function() {
       const lockObj = {id: '2', name: 'lockk'};
       this.lockFindOneStub.resolves(lockObj);
 
-      func(req, this.res, this.nextSpy);
+      await func(req, this.res, this.nextSpy);
 
       expect(req.lock).to.equal(lockObj);
       expect(this.nextSpy).to.be.called;
-      done();
     });
   });
 });

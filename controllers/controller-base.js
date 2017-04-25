@@ -7,13 +7,16 @@ module.exports = class ControllerBase {
     this.log = bunyan.createLogger({ name: this.constructor.name });
   }
 
-  // handling errors we catch
-  logAndSendError(res, next) {
-    const self = this;
-    return (error) => {
-      self.log.error(error);
-      res.json(500, { success: false, error: error.message });
-      return next(false);
-    };
+  /**
+   *
+   * @param error
+   * @param res
+   * @param next
+   * @returns {*}
+   */
+  logAndSendError(error, res, next) {
+    this.log.error(error);
+    res.json(500, { success: false, error: error.message });
+    return next(false);
   };
 };

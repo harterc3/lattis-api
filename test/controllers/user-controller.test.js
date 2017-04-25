@@ -42,23 +42,22 @@ describe('UserController', function() {
   describe('#authenticateUser', function() {
     beforeEach(function() {
       this.func = this.controller.authenticateUser();
-      expect(this.func).to.be.a('function');
+      expect(this.func).to.be.a('asyncfunction');
     });
 
-    it('should respond 404 if there is no user matching the username', function(done) {
+    it('should respond 404 if there is no user matching the username', async function() {
       const req = {
         params: { username: 'Cory', password: 'password' }
       };
       this.userFindOneStub.resolves(null);
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(404);
       expect(this.nextSpy).to.be.calledWith(false);
-      done();
     });
 
-    it('should respond 400 for wrong password', function(done) {
+    it('should respond 400 for wrong password', async function() {
       const badPassword = 'password';
       const req = {
         params: { username: 'Cory', password: badPassword }
@@ -72,14 +71,13 @@ describe('UserController', function() {
       };
       this.userFindOneStub.resolves(user);
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(400);
       expect(this.nextSpy).to.be.calledWith(false);
-      done();
     });
 
-    it('should respond 200 for good username and password', function(done) {
+    it('should respond 200 for good username and password', async function() {
       const password = 'password';
       const req = {
         params: { username: 'Cory', password: password }
@@ -94,55 +92,52 @@ describe('UserController', function() {
       this.userFindOneStub.resolves(user);
       this.createJwtStub.returns('user token wooo');
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.createJwtStub).to.be.called;
       expect(this.resJsonSpy).to.be.calledWith(200);
       expect(this.nextSpy).to.be.called;
-      done();
     });
   });
 
   describe('#getMe', function() {
     beforeEach(function() {
       this.func = this.controller.getMe();
-      expect(this.func).to.be.a('function');
+      expect(this.func).to.be.a('asyncfunction');
     });
 
-    it('should respond 404 if there is no user matching the id in the user\'s auth token', function(done) {
+    it('should respond 404 if there is no user matching the id in the user\'s auth token', async function() {
       const req = {
         jwtUser: { id: 1 }
       };
       this.userFindOneStub.resolves(null);
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(404);
       expect(this.nextSpy).to.be.calledWith(false);
-      done();
     });
 
-    it('should respond 200 if user matching auth token is found', function(done) {
+    it('should respond 200 if user matching auth token is found', async function() {
       const req = {
         jwtUser: { id: 1 }
       };
       this.userFindOneStub.resolves({ id: 1 });
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(200);
       expect(this.nextSpy).to.be.called;
-      done();
     });
   });
 
   describe('#createUser', function() {
     beforeEach(function() {
       this.func = this.controller.createUser();
-      expect(this.func).to.be.a('function');
+      expect(this.func).to.be.a('asyncfunction');
     });
 
-    it('should respond 400 if user creation fails', function(done) {
+    it('should respond 400 if user creation fails', async function() {
       const userObj = {
         username: 'Cory',
         password: 'password',
@@ -155,14 +150,13 @@ describe('UserController', function() {
       const saveStub = sinon.stub().returnsPromise().resolves(null);
       this.userBuildStub.returns(Object.assign({}, userObj, { save: saveStub }));
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(400);
       expect(this.nextSpy).to.be.calledWith(false);
-      done();
     });
 
-    it('should respond 201 if user is successfully created', function(done) {
+    it('should respond 201 if user is successfully created', async function() {
       const userObj = {
         username: 'Cory',
         password: 'password',
@@ -175,21 +169,20 @@ describe('UserController', function() {
       const saveStub = sinon.stub().returnsPromise().resolves(userObj);
       this.userBuildStub.returns(Object.assign({}, userObj, { save: saveStub }));
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(201);
       expect(this.nextSpy).to.be.called;
-      done();
     });
   });
 
   describe('#updateUser', function() {
     beforeEach(function() {
       this.func = this.controller.updateUser();
-      expect(this.func).to.be.a('function');
+      expect(this.func).to.be.a('asyncfunction');
     });
 
-    it('should respond 404 if no user matches jwt', function(done) {
+    it('should respond 404 if no user matches jwt', async function() {
       const userObj = {
         id: 1,
         username: 'Cory'
@@ -202,14 +195,13 @@ describe('UserController', function() {
       };
       this.userFindOneStub.resolves(null);
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(404);
       expect(this.nextSpy).to.be.calledWith(false);
-      done();
     });
 
-    it('should respond 400 if user update failed', function(done) {
+    it('should respond 400 if user update failed', async function() {
       const userObj = {
         id: 1,
         username: 'Cory',
@@ -226,14 +218,13 @@ describe('UserController', function() {
       const userUpdateStub = sinon.stub().returnsPromise().resolves(null);
       this.userFindOneStub.resolves(Object.assign({}, userObj, { update: userUpdateStub }));
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(400);
       expect(this.nextSpy).to.be.calledWith(false);
-      done();
     });
 
-    it('should respond 202 if user update succeeds', function(done) {
+    it('should respond 202 if user update succeeds', async function() {
       const userObj = {
         id: 1,
         username: 'Cory',
@@ -251,12 +242,11 @@ describe('UserController', function() {
       this.userFindOneStub.resolves(Object.assign({}, userObj, { update: userUpdateStub }));
       this.createJwtStub.returns('user token wooo');
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.createJwtStub).to.be.called;
       expect(this.resJsonSpy).to.be.calledWith(200);
       expect(this.nextSpy).to.be.called;
-      done();
     });
   });
 });

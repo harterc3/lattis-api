@@ -41,23 +41,22 @@ describe('LockController', function() {
   describe('#getLocks', function() {
     beforeEach(function() {
       this.func = this.controller.getLocks();
-      expect(this.func).to.be.a('function');
+      expect(this.func).to.be.a('asyncfunction');
     });
 
-    it('should respond 404 if no user matches jwt', function(done) {
+    it('should respond 404 if no user matches jwt', async function() {
       const req = {
         jwtUser: { id: 1 }
       };
       this.userFindOneStub.resolves(null);
 
-      this.func(req, this.res, this.nextSpy);
+      const result = await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(404);
       expect(this.nextSpy).to.be.calledWith(false);
-      done();
     });
 
-    it('should respond 200 if a user is found', function(done) {
+    it('should respond 200 if a user is found', async function() {
       const req = {
         jwtUser: { id: 1 }
       };
@@ -69,21 +68,20 @@ describe('LockController', function() {
       };
       this.userFindOneStub.resolves(user);
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(200);
       expect(this.nextSpy).to.be.called;
-      done();
     });
   });
 
   describe('#createLock', function() {
     beforeEach(function() {
       this.func = this.controller.createLock();
-      expect(this.func).to.be.a('function');
+      expect(this.func).to.be.a('asyncfunction');
     });
 
-    it('should return 404 when current user is not found', function(done) {
+    it('should return 404 when current user is not found', async function() {
       const lock = {
         name: 'A Lock',
         macId: 'abcd-1234'
@@ -97,14 +95,13 @@ describe('LockController', function() {
       };
       this.userFindOneStub.resolves(null);
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(404);
       expect(this.nextSpy).to.be.calledWith(false);
-      done();
     });
 
-    it('should return 400 when lock creation fails', function(done) {
+    it('should return 400 when lock creation fails', async function() {
       const lock = {
         name: 'A Lock',
         macId: 'abcd-1234'
@@ -125,14 +122,13 @@ describe('LockController', function() {
       this.userFindOneStub.resolves(user);
       this.lockCreateStub.resolves(null);
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(400);
       expect(this.nextSpy).to.be.calledWith(false);
-      done();
     });
 
-    it('should return 201 when lock is successfully created and added to user', function(done) {
+    it('should return 201 when lock is successfully created and added to user', async function() {
       const lock = {
         name: 'A Lock',
         macId: 'abcd-1234'
@@ -154,21 +150,20 @@ describe('LockController', function() {
       this.userFindOneStub.resolves(Object.assign({}, user, { addLock: userAddLockStub }));
       this.lockCreateStub.resolves(lock);
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(201);
       expect(this.nextSpy).to.be.called;
-      done();
     });
   });
 
   describe('#updateLock', function() {
     beforeEach(function() {
       this.func = this.controller.updateLock();
-      expect(this.func).to.be.a('function');
+      expect(this.func).to.be.a('asyncfunction');
     });
 
-    it('should return 404 when lock isn\'t found', function(done) {
+    it('should return 404 when lock isn\'t found', async function() {
       const req = {
         lock: null,
         jwtUser: { id: 1 },
@@ -177,14 +172,13 @@ describe('LockController', function() {
         }
       };
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(404);
       expect(this.nextSpy).to.be.calledWith(false);
-      done();
     });
 
-    it('should return 403 when jwt user isn\'t owner of lock', function(done) {
+    it('should return 403 when jwt user isn\'t owner of lock', async function() {
       const req = {
         lock: {
           ownerId: 2
@@ -195,14 +189,13 @@ describe('LockController', function() {
         }
       };
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(403);
       expect(this.nextSpy).to.be.calledWith(false);
-      done();
     });
 
-    it('should return 200 when new lock name is same as old name', function(done) {
+    it('should return 200 when new lock name is same as old name', async function() {
       const req = {
         lock: {
           ownerId: 1,
@@ -214,14 +207,13 @@ describe('LockController', function() {
         }
       };
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(200);
       expect(this.nextSpy).to.be.calledWith(false);
-      done();
     });
 
-    it('should return 400 when lock update fails', function(done) {
+    it('should return 400 when lock update fails', async function() {
       const lockUpdateStub = sinon.stub().returnsPromise().resolves(null);
       const req = {
         lock: {
@@ -236,14 +228,13 @@ describe('LockController', function() {
         }
       };
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(400);
       expect(this.nextSpy).to.be.calledWith(false);
-      done();
     });
 
-    it('should return 200 when lock is successfully updated', function(done) {
+    it('should return 200 when lock is successfully updated', async function() {
       const updatedLock = {
         name: 'B Lock',
         macId: 'abcd-1234',
@@ -263,21 +254,20 @@ describe('LockController', function() {
         }
       };
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(200);
       expect(this.nextSpy).to.be.called;
-      done();
     });
   });
 
   describe('#deleteLock', function() {
     beforeEach(function() {
       this.func = this.controller.deleteLock();
-      expect(this.func).to.be.a('function');
+      expect(this.func).to.be.a('asyncfunction');
     });
 
-    it('should return 403 when user isn\'t owner of lock', function(done) {
+    it('should return 403 when user isn\'t owner of lock', async function() {
       const req = {
         lock: {
           name: 'A Lock',
@@ -288,14 +278,13 @@ describe('LockController', function() {
         params: { id: 'abcd-1234' }
       };
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.resJsonSpy).to.be.calledWith(403);
       expect(this.nextSpy).to.be.calledWith(false);
-      done();
     });
 
-    it('should return 200 when lock is successfully deleted', function(done) {
+    it('should return 200 when lock is successfully deleted', async function() {
       this.lockDestroyStub.resolves(null);
       const req = {
         lock: {
@@ -307,22 +296,21 @@ describe('LockController', function() {
         params: { id: 'abcd-1234' }
       };
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.lockDestroyStub).to.be.called;
       expect(this.resJsonSpy).to.be.calledWith(200);
       expect(this.nextSpy).to.be.called;
-      done();
     });
   });
 
   describe('#shareLock', function() {
     beforeEach(function() {
       this.func = this.controller.shareLock();
-      expect(this.func).to.be.a('function');
+      expect(this.func).to.be.a('asyncfunction');
     });
 
-    it('should return 403 when user isn\'t owner of lock', function(done) {
+    it('should return 403 when user isn\'t owner of lock', async function() {
       const req = {
         lock: {
           name: 'A Lock',
@@ -333,13 +321,12 @@ describe('LockController', function() {
         params: { phone_number: '5555555' }
       };
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
       expect(this.resJsonSpy).to.be.calledWith(403);
       expect(this.nextSpy).to.be.calledWith(false);
-      done();
     });
 
-    it('should return 404 when user is not found', function(done) {
+    it('should return 404 when user is not found', async function() {
       const lock = {
         name: 'A Lock',
         macId: 'abcd-1234',
@@ -352,15 +339,14 @@ describe('LockController', function() {
       };
       this.userFindOneStub.resolves(null);
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.userFindOneStub).to.be.called;
       expect(this.resJsonSpy).to.be.calledWith(404);
       expect(this.nextSpy).to.be.calledWith(false);
-      done();
     });
 
-    it('should return 200 when lock is successfully shared', function(done) {
+    it('should return 200 when lock is successfully shared', async function() {
       const lockAddUserStub = sinon.stub().returnsPromise();
       const lock = {
         name: 'A Lock',
@@ -381,13 +367,12 @@ describe('LockController', function() {
       this.userFindOneStub.resolves(user);
       lockAddUserStub.resolves(lock);
 
-      this.func(req, this.res, this.nextSpy);
+      await this.func(req, this.res, this.nextSpy);
 
       expect(this.userFindOneStub).to.be.called;
       expect(lockAddUserStub).to.be.calledWith(user);
       expect(this.resJsonSpy).to.be.calledWith(200);
       expect(this.nextSpy).to.be.called;
-      done();
     });
   });
 });
